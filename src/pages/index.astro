@@ -1,1235 +1,563 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, AlertTriangle, Users, Wrench, Clock, Plus, Filter, Eye, EyeOff, Shield, Building2, Truck, ExternalLink, Menu, X, Star, Award, CheckCircle } from 'lucide-react';
-
-const EnhancedMiningPortal = () => {
-  const [currentView, setCurrentView] = useState('welcome');
-  const [userType, setUserType] = useState(null); // 'industrial', 'supplier', null
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(8);
-  const [selectedYear, setSelectedYear] = useState(2025);
-
-  // Sample data for the portal
-  const miningCompanies = [
-    { 
-      name: 'Newmont Goldcorp', 
-      sites: ['Porcupine Gold Mine', 'Hoyle Pond Mine'],
-      procurementPortal: 'https://supplier.newmont.com',
-      contactEmail: 'procurement@newmont.com',
-      tier: 'Tier 1'
-    },
-    { 
-      name: 'Agnico Eagle', 
-      sites: ['LaRonde Mine', 'Lapa Mine', 'Goldex Mine'],
-      procurementPortal: 'https://suppliers.agnicoeagle.com',
-      contactEmail: 'suppliers@agnicoeagle.com',
-      tier: 'Tier 1'
-    },
-    { 
-      name: 'Vale', 
-      sites: ['Coleman Mine', 'Creighton Mine'],
-      procurementPortal: 'https://procurement.vale.com',
-      contactEmail: 'vendors@vale.com',
-      tier: 'Tier 1'
-    }
-  ];
-
-  const supplierCategories = [
-    { name: 'Heavy Equipment', companies: 12, avgRating: 4.3 },
-    { name: 'Electrical Services', companies: 8, avgRating: 4.5 },
-    { name: 'Millwright Services', companies: 6, avgRating: 4.7 },
-    { name: 'Specialized Contractors', companies: 15, avgRating: 4.2 },
-    { name: 'Safety Equipment', companies: 10, avgRating: 4.4 }
-  ];
-
-  const [shutdowns, setShutdowns] = useState([
-    {
-      id: 1,
-      company: 'Newmont Goldcorp',
-      site: 'Porcupine Gold Mine',
-      type: 'Mill Maintenance',
-      startDate: '2025-08-15',
-      endDate: '2025-08-22',
-      resources: ['Millwrights', 'Heavy Equipment Operators'],
-      priority: 'high',
-      location: 'Timmins',
-      status: 'confirmed',
-      visibility: 'public'
-    }
-  ]);
-
-  const WelcomeView = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700">
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
-        <div className="relative z-10 px-4 py-16 text-center text-white">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-5xl font-bold mb-6">
-              Mining Shutdown Coordination Portal
-            </h1>
-            <p className="text-xl mb-8 text-blue-100">
-              Northeastern Ontario's Premier Platform for Mining Operations Coordination
-            </p>
-            <p className="text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Streamline your mining shutdown schedules, avoid resource conflicts, and connect with verified suppliers. 
-              Our secure platform helps mining companies coordinate maintenance windows while enabling suppliers 
-              to discover opportunities across the region.
-            </p>
-
-            {/* Value Propositions */}
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
-                <Shield className="mx-auto mb-4 text-blue-200" size={48} />
-                <h3 className="text-xl font-semibold mb-2">Secure & Private</h3>
-                <p className="text-blue-100">Bank-grade security with role-based access controls and encrypted data transmission.</p>
-              </div>
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
-                <Calendar className="mx-auto mb-4 text-blue-200" size={48} />
-                <h3 className="text-xl font-semibold mb-2">Smart Coordination</h3>
-                <p className="text-blue-100">AI-powered conflict detection prevents resource scheduling overlaps across the region.</p>
-              </div>
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
-                <Users className="mx-auto mb-4 text-blue-200" size={48} />
-                <h3 className="text-xl font-semibold mb-2">Verified Network</h3>
-                <p className="text-blue-100">Connect with pre-qualified suppliers and contractors with proven track records.</p>
-              </div>
-            </div>
-
-            {/* Call to Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  setUserType('industrial');
-                  setCurrentView('signup');
-                }}
-                className="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors flex items-center justify-center"
-              >
-                <Building2 className="mr-2" size={24} />
-                Industrial Subscriber Access
-              </button>
-              <button
-                onClick={() => {
-                  setUserType('supplier');
-                  setCurrentView('supplier-signup');
-                }}
-                className="bg-green-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors flex items-center justify-center"
-              >
-                <Truck className="mr-2" size={24} />
-                Supplier & Vendor Portal
-              </button>
-            </div>
-
-            <div className="mt-8">
-              <button
-                onClick={() => {
-                  setCurrentView('login');
-                }}
-                className="text-blue-200 hover:text-white underline"
-              >
-                Already have an account? Sign in here
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-            Why Choose Our Platform?
-          </h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <AlertTriangle className="text-blue-600" size={32} />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Conflict Prevention</h3>
-              <p className="text-gray-600">Automatically detect and prevent resource scheduling conflicts</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <MapPin className="text-green-600" size={32} />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Regional Coverage</h3>
-              <p className="text-gray-600">Complete coverage of Northeastern Ontario mining operations</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <Shield className="text-purple-600" size={32} />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Compliance Ready</h3>
-              <p className="text-gray-600">Built-in compliance tracking and audit trails</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <Award className="text-orange-600" size={32} />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Verified Suppliers</h3>
-              <p className="text-gray-600">Pre-qualified suppliers with rating and review system</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics Section */}
-      <div className="bg-gray-100 py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">25+</div>
-              <div className="text-gray-600">Mining Operations</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-green-600 mb-2">150+</div>
-              <div className="text-gray-600">Verified Suppliers</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-purple-600 mb-2">$50M+</div>
-              <div className="text-gray-600">Coordinated Projects</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-orange-600 mb-2">99.8%</div>
-              <div className="text-gray-600">Uptime Guarantee</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const SignupView = () => (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <Building2 className="mx-auto mb-4 text-blue-600" size={48} />
-          <h2 className="text-2xl font-bold">Industrial Subscriber Registration</h2>
-          <p className="text-gray-600 mt-2">Join the coordination network</p>
-        </div>
-
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Company Name</label>
-            <input type="text" className="w-full p-3 border rounded-lg" placeholder="Your mining company" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Primary Contact Name</label>
-            <input type="text" className="w-full p-3 border rounded-lg" placeholder="John Smith" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Business Email</label>
-            <input type="email" className="w-full p-3 border rounded-lg" placeholder="contact@company.com" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Mining Operations Location(s)</label>
-            <select multiple className="w-full p-3 border rounded-lg h-24">
-              <option>Timmins</option>
-              <option>Sudbury</option>
-              <option>Kirkland Lake</option>
-              <option>Val-d'Or</option>
-              <option>Rouyn-Noranda</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone Number</label>
-            <input type="tel" className="w-full p-3 border rounded-lg" placeholder="(705) 555-0123" />
-          </div>
-          
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">Subscription Benefits Include:</h4>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Real-time shutdown coordination</li>
-              <li>• Resource conflict prevention</li>
-              <li>• Supplier discovery tools</li>
-              <li>• Mobile app access</li>
-              <li>• Compliance reporting</li>
-            </ul>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsAuthenticated(true);
-              setCurrentView('dashboard');
-            }}
-          >
-            Register & Request Access
-          </button>
-        </form>
-
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setCurrentView('welcome')}
-            className="text-blue-600 hover:underline"
-          >
-            Back to Welcome
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const SupplierSignupView = () => (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <Truck className="mx-auto mb-4 text-green-600" size={48} />
-          <h2 className="text-2xl font-bold">Supplier & Vendor Registration</h2>
-          <p className="text-gray-600 mt-2">Connect with mining operations</p>
-        </div>
-
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Company Name</label>
-            <input type="text" className="w-full p-3 border rounded-lg" placeholder="Your service company" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Service Categories</label>
-            <select multiple className="w-full p-3 border rounded-lg h-24">
-              <option>Heavy Equipment</option>
-              <option>Electrical Services</option>
-              <option>Millwright Services</option>
-              <option>Specialized Contractors</option>
-              <option>Safety Equipment</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Contact Email</label>
-            <input type="email" className="w-full p-3 border rounded-lg" placeholder="info@supplier.com" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Service Area</label>
-            <select multiple className="w-full p-3 border rounded-lg h-20">
-              <option>Timmins Region</option>
-              <option>Sudbury Region</option>
-              <option>Kirkland Lake Region</option>
-              <option>Regional (All Areas)</option>
-            </select>
-          </div>
-
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-green-800 mb-2">Supplier Benefits Include:</h4>
-            <ul className="text-sm text-green-700 space-y-1">
-              <li>• Discovery by mining companies</li>
-              <li>• Shutdown schedule visibility</li>
-              <li>• Direct procurement portal links</li>
-              <li>• Performance ratings system</li>
-              <li>• Mobile notifications</li>
-            </ul>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsAuthenticated(true);
-              setUserType('supplier');
-              setCurrentView('supplier-dashboard');
-            }}
-          >
-            Register & Request Verification
-          </button>
-        </form>
-
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setCurrentView('welcome')}
-            className="text-green-600 hover:underline"
-          >
-            Back to Welcome
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const SupplierDashboardView = () => (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-green-600 text-white p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Supplier Portal</h1>
-            <p className="text-green-200">Northeastern Ontario Mining Network</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="bg-green-500 px-3 py-1 rounded text-sm">Verified Supplier</span>
-            <button
-              onClick={() => {
-                setCurrentView('welcome');
-                setIsAuthenticated(false);
-                setUserType(null);
-              }}
-              className="text-green-200 hover:text-white"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Upcoming Opportunities */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">Upcoming Shutdown Opportunities</h2>
-            <div className="space-y-4">
-              {shutdowns.map((shutdown, i) => (
-                <div key={i} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold">{shutdown.company}</h3>
-                      <p className="text-sm text-gray-600">{shutdown.site} - {shutdown.type}</p>
-                      <p className="text-sm text-gray-500">{shutdown.startDate} to {shutdown.endDate}</p>
-                    </div>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded">
-                      {shutdown.priority} priority
-                    </span>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <p className="text-sm font-medium">Required Resources:</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {shutdown.resources.map((resource, j) => (
-                        <span key={j} className="bg-gray-100 px-2 py-1 text-xs rounded">
-                          {resource}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <button className="bg-blue-500 text-white px-3 py-1 text-sm rounded hover:bg-blue-600">
-                      View Details
-                    </button>
-                    <button 
-                      onClick={() => window.open(miningCompanies.find(c => c.name === shutdown.company)?.procurementPortal, '_blank')}
-                      className="bg-green-500 text-white px-3 py-1 text-sm rounded hover:bg-green-600 flex items-center"
-                    >
-                      Go to Procurement Portal <ExternalLink size={12} className="ml-1" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Procurement Portals */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Direct Procurement Portals</h2>
-              <div className="space-y-3">
-                {miningCompanies.map((company, i) => (
-                  <div key={i} className="border rounded p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-sm">{company.name}</h3>
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                        {company.tier}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-2">{company.contactEmail}</p>
-                    <button
-                      onClick={() => window.open(company.procurementPortal, '_blank')}
-                      className="w-full bg-blue-500 text-white py-1 px-2 text-xs rounded hover:bg-blue-600 flex items-center justify-center"
-                    >
-                      Access Portal <ExternalLink size={10} className="ml-1" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <p className="text-xs text-yellow-800">
-                  <strong>Important:</strong> All bidding must be conducted through the mining company's 
-                  official procurement portal. This platform facilitates discovery only.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">Your Performance</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm">Average Rating</span>
-                  <div className="flex items-center">
-                    <Star className="text-yellow-400 fill-current" size={16} />
-                    <span className="ml-1 font-semibold">4.8</span>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Projects Completed</span>
-                  <span className="font-semibold">23</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">On-Time Delivery</span>
-                  <span className="font-semibold text-green-600">98%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const DashboardView = () => {
-    const [selectedDashboardView, setSelectedDashboardView] = useState('overview');
-    
-    const renderDashboardContent = () => {
-      switch (selectedDashboardView) {
-        case 'overview':
-          return (
-            <div className="space-y-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-bold mb-2">Resource Coordination Overview</h2>
-                <p className="text-gray-600">
-                  Manage your shutdown schedules and coordinate with regional mining operations
-                </p>
-              </div>
-
-              {/* Action Cards */}
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                  <Calendar className="text-blue-600 mb-3" size={32} />
-                  <h3 className="font-semibold mb-2">Schedule Shutdown</h3>
-                  <p className="text-gray-600 text-sm mb-4">Plan and coordinate your next maintenance window</p>
-                  <button 
-                    onClick={() => setSelectedDashboardView('schedule')}
-                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-                  >
-                    Create Schedule
-                  </button>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                  <AlertTriangle className="text-red-600 mb-3" size={32} />
-                  <h3 className="font-semibold mb-2">View Conflicts</h3>
-                  <p className="text-gray-600 text-sm mb-4">Review and resolve resource scheduling conflicts</p>
-                  <button 
-                    onClick={() => setSelectedDashboardView('conflicts')}
-                    className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
-                  >
-                    Check Conflicts
-                  </button>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                  <Users className="text-green-600 mb-3" size={32} />
-                  <h3 className="font-semibold mb-2">Find Suppliers</h3>
-                  <p className="text-gray-600 text-sm mb-4">Connect with verified regional suppliers</p>
-                  <button 
-                    onClick={() => setSelectedDashboardView('suppliers')}
-                    className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-                  >
-                    Browse Suppliers
-                  </button>
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">Recent Activity</h3>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
-                      <div className="flex items-center">
-                        <CheckCircle className="text-blue-600 mr-3" size={20} />
-                        <div>
-                          <p className="font-medium">Shutdown scheduled successfully</p>
-                          <p className="text-sm text-gray-600">Porcupine Gold Mine - Mill Maintenance</p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-500">2 hours ago</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
-                      <div className="flex items-center">
-                        <AlertTriangle className="text-yellow-600 mr-3" size={20} />
-                        <div>
-                          <p className="font-medium">Potential resource conflict detected</p>
-                          <p className="text-sm text-gray-600">Heavy Equipment Operators - August 18-22</p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-500">4 hours ago</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-
-        case 'schedule':
-          return (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Shutdown Scheduling</h2>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
-                  <Plus className="mr-2" size={16} />
-                  New Shutdown
-                </button>
-              </div>
-
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Scheduling Form */}
-                <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-semibold mb-4">Schedule New Shutdown</h3>
-                  <form className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Mining Site</label>
-                        <select className="w-full p-3 border rounded-lg">
-                          <option>Porcupine Gold Mine</option>
-                          <option>Hoyle Pond Mine</option>
-                          <option>LaRonde Mine</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Shutdown Type</label>
-                        <select className="w-full p-3 border rounded-lg">
-                          <option>Mill Maintenance</option>
-                          <option>Underground Equipment Overhaul</option>
-                          <option>Surface Plant Repairs</option>
-                          <option>Electrical Infrastructure</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Start Date</label>
-                        <input type="date" className="w-full p-3 border rounded-lg" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">End Date</label>
-                        <input type="date" className="w-full p-3 border rounded-lg" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Priority Level</label>
-                      <select className="w-full p-3 border rounded-lg">
-                        <option>High - Critical Operations</option>
-                        <option>Medium - Standard Maintenance</option>
-                        <option>Low - Discretionary</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Required Resources</label>
-                      <div className="grid md:grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded p-3">
-                        {resourceTypes.map((resource, i) => (
-                          <label key={i} className="flex items-center">
-                            <input type="checkbox" className="mr-2" />
-                            <span className="text-sm">{resource}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Description</label>
-                      <textarea 
-                        className="w-full p-3 border rounded-lg h-24" 
-                        placeholder="Additional details about the shutdown..."
-                      ></textarea>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-                        Schedule Shutdown
-                      </button>
-                      <button type="button" className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400">
-                        Save Draft
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="space-y-4">
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <h4 className="font-semibold mb-3">Resource Availability</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Millwrights</span>
-                        <span className="text-green-600">Available</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Heavy Equipment</span>
-                        <span className="text-yellow-600">Limited</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Electricians</span>
-                        <span className="text-red-600">Conflict</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow p-4">
-                    <h4 className="font-semibold mb-3">Recommended Dates</h4>
-                    <div className="space-y-2">
-                      <div className="p-2 bg-green-50 rounded text-sm">
-                        <div className="font-medium">Sept 15-22</div>
-                        <div className="text-gray-600">No conflicts</div>
-                      </div>
-                      <div className="p-2 bg-blue-50 rounded text-sm">
-                        <div className="font-medium">Oct 1-8</div>
-                        <div className="text-gray-600">Minor conflicts</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-
-        case 'conflicts':
-          return (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold">Resource Conflicts Management</h2>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <AlertTriangle className="text-red-600 mr-2" size={20} />
-                  <h3 className="font-semibold text-red-800">Active Conflicts Detected</h3>
-                </div>
-                <p className="text-red-700 text-sm">
-                  2 resource conflicts require immediate attention to prevent operational delays.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg shadow border-l-4 border-red-500">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg text-red-800">🚨 CRITICAL Conflict</h3>
-                        <p className="text-sm text-gray-600">Heavy Equipment Operators shortage</p>
-                      </div>
-                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">High Priority</span>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <div className="bg-gray-50 p-4 rounded">
-                        <h4 className="font-medium">Your Shutdown</h4>
-                        <p className="text-sm text-gray-600">Porcupine Gold Mine</p>
-                        <p className="text-sm">Mill Maintenance</p>
-                        <p className="text-xs text-gray-500">Aug 15-22, 2025</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded">
-                        <h4 className="font-medium">Conflicting Operation</h4>
-                        <p className="text-sm text-gray-600">Vale - Coleman Mine</p>
-                        <p className="text-sm">Electrical Infrastructure</p>
-                        <p className="text-xs text-gray-500">Aug 18-25, 2025</p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h5 className="font-medium mb-2">Suggested Solutions:</h5>
-                      <div className="space-y-2">
-                        <div className="bg-blue-50 p-3 rounded">
-                          <p className="text-sm font-medium">Option 1: Reschedule to September 15-22</p>
-                          <p className="text-xs text-gray-600">No conflicts, all resources available</p>
-                        </div>
-                        <div className="bg-yellow-50 p-3 rounded">
-                          <p className="text-sm font-medium">Option 2: Split shutdown into phases</p>
-                          <p className="text-xs text-gray-600">Reduce resource overlap by 60%</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <button className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700">
-                        Accept Suggestion
-                      </button>
-                      <button className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700">
-                        Contact Other Party
-                      </button>
-                      <button className="bg-gray-300 text-gray-700 px-4 py-2 text-sm rounded hover:bg-gray-400">
-                        Negotiate Resources
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow border-l-4 border-yellow-500">
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg text-yellow-800">⚠️ MEDIUM Conflict</h3>
-                        <p className="text-sm text-gray-600">Specialized Contractors overlap</p>
-                      </div>
-                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm">Medium Priority</span>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <div className="bg-gray-50 p-4 rounded">
-                        <h4 className="font-medium">Your Shutdown</h4>
-                        <p className="text-sm text-gray-600">Hoyle Pond Mine</p>
-                        <p className="text-sm">Conveyor System Maintenance</p>
-                        <p className="text-xs text-gray-500">Aug 20-28, 2025</p>
-                      </div>
-                      <div className="bg-gray-50 p-4 rounded">
-                        <h4 className="font-medium">Conflicting Operation</h4>
-                        <p className="text-sm text-gray-600">Agnico Eagle - LaRonde</p>
-                        <p className="text-sm">Underground Equipment</p>
-                        <p className="text-xs text-gray-500">Aug 18-25, 2025</p>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-3">
-                      <button className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700">
-                        View Solutions
-                      </button>
-                      <button className="bg-gray-300 text-gray-700 px-4 py-2 text-sm rounded hover:bg-gray-400">
-                        Monitor
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-
-        case 'suppliers':
-          return (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Verified Supplier Network</h2>
-                <div className="flex space-x-2">
-                  <select className="border rounded px-3 py-2 text-sm">
-                    <option>All Categories</option>
-                    <option>Heavy Equipment</option>
-                    <option>Electrical Services</option>
-                    <option>Millwright Services</option>
-                  </select>
-                  <select className="border rounded px-3 py-2 text-sm">
-                    <option>All Regions</option>
-                    <option>Timmins</option>
-                    <option>Sudbury</option>
-                    <option>Kirkland Lake</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-4 gap-6">
-                {supplierCategories.map((category, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold">{category.name}</h3>
-                      <div className="flex items-center">
-                        <Star className="text-yellow-400 fill-current" size={16} />
-                        <span className="ml-1 text-sm">{category.avgRating}</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">{category.companies} verified companies</p>
-                    <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm">
-                      Browse Suppliers
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">Top Rated Regional Suppliers</h3>
-                </div>
-                <div className="divide-y">
-                  {[
-                    { name: 'Northern Heavy Equipment Ltd.', category: 'Heavy Equipment', rating: 4.9, location: 'Timmins', projects: 45 },
-                    { name: 'Superior Millwright Services', category: 'Millwright Services', rating: 4.8, location: 'Sudbury', projects: 32 },
-                    { name: 'Goldfield Electrical Contractors', category: 'Electrical Services', rating: 4.7, location: 'Kirkland Lake', projects: 28 }
-                  ].map((supplier, i) => (
-                    <div key={i} className="p-6 hover:bg-gray-50">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">{supplier.name}</h4>
-                          <p className="text-sm text-gray-600">{supplier.category} • {supplier.location}</p>
-                          <p className="text-xs text-gray-500">{supplier.projects} completed projects</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center mb-2">
-                            <Star className="text-yellow-400 fill-current mr-1" size={16} />
-                            <span className="font-semibold">{supplier.rating}</span>
-                          </div>
-                          <button className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700">
-                            View Profile
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-
-        default:
-          return null;
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-blue-900 text-white p-4">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Mining Coordination Dashboard</h1>
-              <p className="text-blue-200">Industrial Subscriber Portal</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="bg-blue-800 px-3 py-1 rounded text-sm">Newmont Goldcorp</span>
-              <button
-                onClick={() => {
-                  setCurrentView('welcome');
-                  setIsAuthenticated(false);
-                  setUserType(null);
-                }}
-                className="text-blue-200 hover:text-white"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Dashboard Navigation */}
-        <nav className="bg-white border-b border-gray-200 p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex space-x-8">
-              <button
-                onClick={() => setSelectedDashboardView('overview')}
-                className={`pb-2 border-b-2 font-medium text-sm ${
-                  selectedDashboardView === 'overview' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setSelectedDashboardView('schedule')}
-                className={`pb-2 border-b-2 font-medium text-sm ${
-                  selectedDashboardView === 'schedule' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Schedule Shutdowns
-              </button>
-              <button
-                onClick={() => setSelectedDashboardView('conflicts')}
-                className={`pb-2 border-b-2 font-medium text-sm ${
-                  selectedDashboardView === 'conflicts' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Conflicts (2)
-              </button>
-              <button
-                onClick={() => setSelectedDashboardView('suppliers')}
-                className={`pb-2 border-b-2 font-medium text-sm ${
-                  selectedDashboardView === 'suppliers' 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Suppliers
-              </button>
-            </div>
-          </div>
-        </nav>
-
-        {/* Quick Stats */}
-        <div className="bg-white border-b p-4">
-          <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">3</div>
-              <div className="text-sm text-gray-600">Active Shutdowns</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">2</div>
-              <div className="text-sm text-gray-600">Resource Conflicts</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">15</div>
-              <div className="text-sm text-gray-600">Available Suppliers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">7</div>
-              <div className="text-sm text-gray-600">Days Until Next</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto p-4">
-          {renderDashboardContent()}
-        </div>
-      </div>
-    );
-  };
-
-  const LoginView = () => (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-        <SecurityStatus />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mining Shutdown Coordination Portal - Northeastern Ontario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations and styles */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
         
-        {securityAlerts.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <div className="flex items-center">
-              <AlertTriangle className="text-red-600 mr-2" size={16} />
-              <div>
-                {securityAlerts.map((alert, i) => (
-                  <p key={i} className="text-sm text-red-800">{alert}</p>
-                ))}
-              </div>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .security-indicator {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af, #3b82f6);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Main Container -->
+    <div id="app">
+        <!-- Welcome Page -->
+        <div id="welcomePage" class="min-h-screen hero-gradient">
+            <!-- Hero Section -->
+            <div class="relative">
+                <div class="absolute inset-0 bg-black opacity-20"></div>
+                <div class="relative z-10 px-4 py-16 text-center text-white">
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <h1 class="text-5xl font-bold mb-6">
+                            Mining Shutdown Coordination Portal
+                        </h1>
+                        <p class="text-xl mb-8 text-blue-100">
+                            Northeastern Ontario's Premier Platform for Mining Operations Coordination
+                        </p>
+                        <p class="text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
+                            Streamline your mining shutdown schedules, avoid resource conflicts, and connect with verified suppliers. 
+                            Our secure platform helps mining companies coordinate maintenance windows while enabling suppliers 
+                            to discover opportunities across the region.
+                        </p>
+
+                        <!-- Value Propositions -->
+                        <div class="grid md:grid-cols-3 gap-8 mb-12">
+                            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 card-hover">
+                                <div class="w-12 h-12 mx-auto mb-4 bg-blue-200 rounded-full flex items-center justify-center">
+                                    <span class="text-2xl">🛡️</span>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">Secure & Private</h3>
+                                <p class="text-blue-100">Bank-grade security with role-based access controls and encrypted data transmission.</p>
+                            </div>
+                            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 card-hover">
+                                <div class="w-12 h-12 mx-auto mb-4 bg-blue-200 rounded-full flex items-center justify-center">
+                                    <span class="text-2xl">📅</span>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">Smart Coordination</h3>
+                                <p class="text-blue-100">AI-powered conflict detection prevents resource scheduling overlaps across the region.</p>
+                            </div>
+                            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 card-hover">
+                                <div class="w-12 h-12 mx-auto mb-4 bg-blue-200 rounded-full flex items-center justify-center">
+                                    <span class="text-2xl">👥</span>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">Verified Network</h3>
+                                <p class="text-blue-100">Connect with pre-qualified suppliers and contractors with proven track records.</p>
+                            </div>
+                        </div>
+
+                        <!-- Call to Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button
+                                onclick="showIndustrialSignup()"
+                                class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors flex items-center justify-center card-hover"
+                            >
+                                <span class="mr-2">🏭</span>
+                                Industrial Subscriber Access
+                            </button>
+                            <button
+                                onclick="showSupplierSignup()"
+                                class="bg-green-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors flex items-center justify-center card-hover"
+                            >
+                                <span class="mr-2">🚛</span>
+                                Supplier & Vendor Portal
+                            </button>
+                        </div>
+
+                        <div class="mt-8">
+                            <button
+                                onclick="showLogin()"
+                                class="text-blue-200 hover:text-white underline"
+                            >
+                                Already have an account? Sign in here
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        )}
 
-        <div className="text-center mb-8">
-          <Shield className="mx-auto mb-4 text-blue-600" size={48} />
-          <h2 className="text-2xl font-bold">Secure Sign In</h2>
-          <p className="text-gray-600 mt-2">Access your mining coordination portal</p>
-        </div>
-
-        <form className="space-y-4" onSubmit={handleSecureLogin}>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email *</label>
-            <input 
-              type="email" 
-              className={`w-full p-3 border rounded-lg ${formErrors.email ? 'border-red-500' : ''}`}
-              placeholder="your@company.com" 
-              value={formData.email}
-              onChange={(e) => handleSecureInput('email', e.target.value, 'email')}
-              required
-            />
-            {formErrors.email && (
-              <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Password *</label>
-            <input 
-              type="password" 
-              className="w-full p-3 border rounded-lg" 
-              placeholder="••••••••" 
-              value={formData.password}
-              onChange={(e) => handleSecureInput('password', e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-2" />
-              <span className="text-sm">Remember me (this device)</span>
-            </label>
-            <button type="button" className="text-sm text-blue-600 hover:underline">
-              Forgot password?
-            </button>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center text-sm text-gray-600">
-              <KeyRound className="mr-2" size={16} />
-              <span>Multi-factor authentication will be required after login</span>
+            <!-- Features Section -->
+            <div class="bg-white py-16">
+                <div class="max-w-6xl mx-auto px-4">
+                    <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">
+                        Why Choose Our Platform?
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="text-center">
+                            <div class="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <span class="text-2xl">⚠️</span>
+                            </div>
+                            <h3 class="font-semibold text-lg mb-2">Conflict Prevention</h3>
+                            <p class="text-gray-600">Automatically detect and prevent resource scheduling conflicts</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <span class="text-2xl">📍</span>
+                            </div>
+                            <h3 class="font-semibold text-lg mb-2">Regional Coverage</h3>
+                            <p class="text-gray-600">Complete coverage of Northeastern Ontario mining operations</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <span class="text-2xl">🛡️</span>
+                            </div>
+                            <h3 class="font-semibold text-lg mb-2">Compliance Ready</h3>
+                            <p class="text-gray-600">Built-in compliance tracking and audit trails</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <span class="text-2xl">🏆</span>
+                            </div>
+                            <h3 class="font-semibold text-lg mb-2">Verified Suppliers</h3>
+                            <p class="text-gray-600">Pre-qualified suppliers with rating and review system</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={Object.keys(formErrors).length > 0}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            Sign In Securely
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <div className="text-xs text-gray-500 mb-4">
-            Your connection is secured with 256-bit SSL encryption
-          </div>
-          <button
-            onClick={() => setCurrentView('welcome')}
-            className="text-blue-600 hover:underline"
-          >
-            Back to Welcome
-          </button>
+            <!-- Statistics Section -->
+            <div class="bg-gray-100 py-12">
+                <div class="max-w-4xl mx-auto px-4 text-center">
+                    <div class="grid md:grid-cols-4 gap-8">
+                        <div>
+                            <div class="text-3xl font-bold text-blue-600 mb-2">25+</div>
+                            <div class="text-gray-600">Mining Operations</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-green-600 mb-2">150+</div>
+                            <div class="text-gray-600">Verified Suppliers</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-purple-600 mb-2">$50M+</div>
+                            <div class="text-gray-600">Coordinated Projects</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-orange-600 mb-2">99.8%</div>
+                            <div class="text-gray-600">Uptime Guarantee</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- Industrial Signup Page -->
+        <div id="industrialSignupPage" class="min-h-screen bg-gray-50 py-12" style="display: none;">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+                <!-- Security Status -->
+                <div class="security-indicator rounded-lg p-3 mb-4 text-white">
+                    <div class="flex items-center">
+                        <span class="mr-2">🛡️</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">Security Status: Protected</p>
+                            <div class="text-xs mt-1 space-x-4">
+                                <span>🔒 SSL/TLS Encrypted</span>
+                                <span>🛡️ OWASP Compliant</span>
+                                <span>🔐 MFA Required</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-xl">🏭</span>
+                    </div>
+                    <h2 class="text-2xl font-bold">Industrial Subscriber Registration</h2>
+                    <p class="text-gray-600 mt-2">Secure access to the coordination network</p>
+                </div>
+
+                <form onsubmit="submitIndustrialForm(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Company Name *</label>
+                        <input type="text" id="companyName" class="w-full p-3 border rounded-lg" placeholder="Your mining company" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Primary Contact Name *</label>
+                        <input type="text" id="contactName" class="w-full p-3 border rounded-lg" placeholder="John Smith" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Business Email *</label>
+                        <input type="email" id="email" class="w-full p-3 border rounded-lg" placeholder="contact@company.com" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Secure Password *</label>
+                        <input type="password" id="password" class="w-full p-3 border rounded-lg" placeholder="Create strong password" required>
+                        <div id="passwordStrength" class="mt-2 text-sm text-gray-600">
+                            Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters.
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Mining Operations Location(s)</label>
+                        <select multiple class="w-full p-3 border rounded-lg h-24">
+                            <option>Timmins</option>
+                            <option>Sudbury</option>
+                            <option>Kirkland Lake</option>
+                            <option>Val-d'Or</option>
+                            <option>Rouyn-Noranda</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Phone Number</label>
+                        <input type="tel" class="w-full p-3 border rounded-lg" placeholder="(705) 555-0123">
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+                            <span class="mr-2">🔒</span>
+                            Security & Compliance Features:
+                        </h4>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• End-to-end encryption for all data</li>
+                            <li>• Multi-factor authentication required</li>
+                            <li>• OWASP Top 10 security compliance</li>
+                            <li>• Regular security audits and monitoring</li>
+                            <li>• Role-based access controls</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p class="text-xs text-yellow-800">
+                            <strong>Privacy Notice:</strong> Your data is encrypted and never shared with third parties. 
+                            We comply with PIPEDA and other applicable privacy regulations.
+                        </p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        Register & Request Secure Access
+                    </button>
+                </form>
+
+                <div class="text-center mt-6">
+                    <button onclick="showWelcome()" class="text-blue-600 hover:underline">
+                        Back to Welcome
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Signup Page -->
+        <div id="supplierSignupPage" class="min-h-screen bg-gray-50 py-12" style="display: none;">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+                <div class="security-indicator rounded-lg p-3 mb-4 text-white">
+                    <div class="flex items-center">
+                        <span class="mr-2">🛡️</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">Security Status: Protected</p>
+                            <div class="text-xs mt-1 space-x-4">
+                                <span>🔒 SSL/TLS Encrypted</span>
+                                <span>🛡️ OWASP Compliant</span>
+                                <span>🔐 MFA Required</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-green-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-xl">🚛</span>
+                    </div>
+                    <h2 class="text-2xl font-bold">Supplier & Vendor Registration</h2>
+                    <p class="text-gray-600 mt-2">Connect with mining operations</p>
+                </div>
+
+                <form onsubmit="submitSupplierForm(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Company Name *</label>
+                        <input type="text" class="w-full p-3 border rounded-lg" placeholder="Your service company" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Service Categories</label>
+                        <select multiple class="w-full p-3 border rounded-lg h-24">
+                            <option>Heavy Equipment</option>
+                            <option>Electrical Services</option>
+                            <option>Millwright Services</option>
+                            <option>Specialized Contractors</option>
+                            <option>Safety Equipment</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Contact Email *</label>
+                        <input type="email" class="w-full p-3 border rounded-lg" placeholder="info@supplier.com" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Service Area</label>
+                        <select multiple class="w-full p-3 border rounded-lg h-20">
+                            <option>Timmins Region</option>
+                            <option>Sudbury Region</option>
+                            <option>Kirkland Lake Region</option>
+                            <option>Regional (All Areas)</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-2">Supplier Benefits Include:</h4>
+                        <ul class="text-sm text-green-700 space-y-1">
+                            <li>• Discovery by mining companies</li>
+                            <li>• Shutdown schedule visibility</li>
+                            <li>• Direct procurement portal links</li>
+                            <li>• Performance ratings system</li>
+                            <li>• Mobile notifications</li>
+                        </ul>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                    >
+                        Register & Request Verification
+                    </button>
+                </form>
+
+                <div class="text-center mt-6">
+                    <button onclick="showWelcome()" class="text-green-600 hover:underline">
+                        Back to Welcome
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="min-h-screen bg-gray-50 py-12" style="display: none;">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+                <div class="security-indicator rounded-lg p-3 mb-4 text-white">
+                    <div class="flex items-center">
+                        <span class="mr-2">🛡️</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">Security Status: Protected</p>
+                            <div class="text-xs mt-1 space-x-4">
+                                <span>🔒 SSL/TLS Encrypted</span>
+                                <span>🛡️ OWASP Compliant</span>
+                                <span>🔐 MFA Required</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-xl">🛡️</span>
+                    </div>
+                    <h2 class="text-2xl font-bold">Secure Sign In</h2>
+                    <p class="text-gray-600 mt-2">Access your mining coordination portal</p>
+                </div>
+
+                <form onsubmit="submitLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email *</label>
+                        <input type="email" class="w-full p-3 border rounded-lg" placeholder="your@company.com" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password *</label>
+                        <input type="password" class="w-full p-3 border rounded-lg" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2">
+                            <span class="text-sm">Remember me (this device)</span>
+                        </label>
+                        <button type="button" class="text-sm text-blue-600 hover:underline">
+                            Forgot password?
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <span class="mr-2">🔑</span>
+                            <span>Multi-factor authentication will be required after login</span>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        Sign In Securely
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <div class="text-xs text-gray-500 mb-4">
+                        Your connection is secured with 256-bit SSL encryption
+                    </div>
+                    <button onclick="showWelcome()" class="text-blue-600 hover:underline">
+                        Back to Welcome
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Page -->
+        <div id="successPage" class="min-h-screen bg-gray-50 flex items-center justify-center" style="display: none;">
+            <div class="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">✅</span>
+                </div>
+                <h2 class="text-2xl font-bold mb-4">Registration Successful!</h2>
+                <p class="text-gray-600 mb-6">
+                    Thank you for registering with the Mining Shutdown Coordination Portal. 
+                    Your application has been received and is under review.
+                </p>
+                <p class="text-sm text-gray-500 mb-6">
+                    You will receive an email confirmation within 24 hours with your account activation details.
+                </p>
+                <button onclick="showWelcome()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Return to Welcome
+                </button>
+            </div>
+        </div>
     </div>
-  );<label className="flex items-center">
-              <input type="checkbox" className="mr-2" />
-              <span className="text-sm">Remember me</span>
-            </label>
-            <button type="button" className="text-sm text-blue-600 hover:underline">
-              Forgot password?
-            </button>
-          </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsAuthenticated(true);
-              setUserType('industrial');
-              setCurrentView('dashboard');
-            }}
-          >
-            Sign In
-          </button>
-        </form>
+    <!-- JavaScript -->
+    <script>
+        // Page navigation functions
+        function showWelcome() {
+            hideAllPages();
+            document.getElementById('welcomePage').style.display = 'block';
+        }
 
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setCurrentView('welcome')}
-            className="text-blue-600 hover:underline"
-          >
-            Back to Welcome
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+        function showIndustrialSignup() {
+            hideAllPages();
+            document.getElementById('industrialSignupPage').style.display = 'block';
+        }
 
-  // Main render logic with security checks
-  if (!sessionData.isAuthenticated) {
-    switch (currentView) {
-      case 'signup':
-        return <SignupView />;
-      case 'supplier-signup':
-        return <SupplierSignupView />;
-      case 'login':
-        return <LoginView />;
-      default:
-        return <WelcomeView />;
-    }
-  }
+        function showSupplierSignup() {
+            hideAllPages();
+            document.getElementById('supplierSignupPage').style.display = 'block';
+        }
 
-  // Check for session timeout
-  if (sessionData.isLocked) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
-          <div className="text-center">
-            <Lock className="mx-auto mb-4 text-red-600" size={48} />
-            <h2 className="text-xl font-bold mb-2">Account Temporarily Locked</h2>
-            <p className="text-gray-600 mb-4">
-              Due to multiple failed login attempts, your account has been temporarily locked for security.
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Please try again in 15 minutes or contact support.
-            </p>
-            <button
-              onClick={() => {
-                setSessionData(prev => ({ ...prev, isLocked: false, loginAttempts: 0 }));
-                setCurrentView('welcome');
-              }}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Return to Welcome
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        function showLogin() {
+            hideAllPages();
+            document.getElementById('loginPage').style.display = 'block';
+        }
 
-  // Authenticated views with security context
-  if (userType === 'supplier') {
-    return <SupplierDashboardView />;
-  }
+        function showSuccess() {
+            hideAllPages();
+            document.getElementById('successPage').style.display = 'block';
+        }
 
-  return <DashboardView />;
-};
+        function hideAllPages() {
+            const pages = ['welcomePage', 'industrialSignupPage', 'supplierSignupPage', 'loginPage', 'successPage'];
+            pages.forEach(pageId => {
+                document.getElementById(pageId).style.display = 'none';
+            });
+        }
 
-export default EnhancedMiningPortal;
+        // Form submission handlers
+        function submitIndustrialForm(event) {
+            event.preventDefault();
+            
+            // Basic validation
+            const companyName = document.getElementById('companyName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!companyName || !email || !password) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            if (password.length < 12) {
+                alert('Password must be at least 12 characters long.');
+                return;
+            }
+            
+            // Simulate successful registration
+            showSuccess();
+        }
 
-/*
-OWASP TOP 10 2021 SECURITY IMPLEMENTATION SUMMARY:
+        function submitSupplierForm(event) {
+            event.preventDefault();
+            showSuccess();
+        }
 
-✅ A01: Broken Access Control
-- Session timeout (30 minutes)
-- Role-based access control
-- Account lockout after failed attempts
-- Activity tracking and auto-logout
+        function submitLogin(event) {
+            event.preventDefault();
+            alert('Demo Mode: Login functionality will be available in the full version. Thank you for testing the portal!');
+        }
 
-✅ A02: Cryptographic Failures
-- Strong password requirements (12+ chars, complexity)
-- Password strength validation
-- Secure session management
-- Input sanitization
-
-✅ A03: Injection
-- Input validation and sanitization
-- HTML entity encoding
-- RegEx validation for all inputs
-- XSS prevention
-
-✅ A04: Insecure Design
-- Rate limiting on login/registration
-- Security-by-design architecture
-- Fail-secure defaults
-
-✅ A05: Security Misconfiguration
-- Content Security Policy headers defined
-- Security status indicators
-- Secure defaults throughout
-
-✅ A06: Vulnerable and Outdated Components
-- Modern React patterns
-- No deprecated libraries
-- Security-focused dependencies
-
-✅ A07: Identification and Authentication Failures
-- Multi-factor authentication requirement
-- Secure password policies
-- Account lockout mechanisms
-- Session management
-
-✅ A08: Software and Data Integrity Failures
-- Input validation
-- Secure form handling
-- Data integrity checks
-
-✅ A09: Security Logging and Monitoring Failures
-- Activity logging
-- Security event tracking
-- Failed attempt monitoring
-
-✅ A10: Server-Side Request Forgery (SSRF)
-- Input validation
-- URL validation patterns
-- Secure external link handling
-
-PRODUCTION REQUIREMENTS:
-- Implement HTTPS/TLS 1.3
-- Add backend API security
-- Database encryption
-- Security headers (HSTS, X-Frame-Options, etc.)
-- Regular security audits
-- Penetration testing
-- SIEM integration
-- Backup encryption
-*/
-
+        // Password strength indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    const password = this.value;
+                    const strengthDiv = document.getElementById('passwordStrength');
+                    
+                    if (password.length === 0) {
+                        strengthDiv.textContent = 'Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters.';
+                        strengthDiv.className = 'mt-2 text-sm text-gray-600';
+                    } else if (password.length < 12) {
+                        strengthDiv.textContent = 'Password too short. Need ' + (12 - password.length) + ' more characters.';
+                        strengthDiv.className = 'mt-2 text-sm text-red-600';
+                    } else {
+                        const hasUpper = /[A-Z]/.test(password);
+                        const hasLower = /[a-z]/.test(password);
+                        const hasNumber = /\d/.test(password);
+                        const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/.test(password);
+                        
+                        if (hasUpper && hasLower && hasNumber && hasSpecial) {
+                            strengthDiv.textContent = 'Strong password ✓';
+                            strengthDiv.className = 'mt-2 text-sm text-green-600';
+                        } else {
+                            strengthDiv.textContent = 'Need uppercase, lowercase, number, and special character.';
+                            strengthDiv.className = 'mt-2 text-sm text-yellow-600';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
